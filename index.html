@@ -1,42 +1,51 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
   <title>Hotel Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
 <h1>Hotel Performance Dashboard</h1>
-
 <canvas id="chart"></canvas>
 
 <script>
 const sheetURL = "PASTE_LINK_CSV_DI_SINI";
 
 fetch(sheetURL)
-  .then(res => res.text())
-  .then(text => {
-    const rows = text.split("\n").slice(1);
+  .then(response => {
+    if (!response.ok) throw new Error("Fetch error");
+    return response.text();
+  })
+  .then(csv => {
+    const rows = csv.trim().split("\n").slice(1);
     let labels = [];
-    let data = [];
+    let values = [];
 
-    rows.forEach(r => {
-      let c = r.split(",");
-      labels.push(c[0]);
-      data.push(Number(c[4]));
+    rows.forEach(row => {
+      const cols = row.split(",");
+      if (cols.length >= 5) {
+        labels.push(cols[0]);
+        values.push(parseFloat(cols[4]) || 0);
+      }
     });
 
-    new Chart(document.getElementById("chart"), {
+    const ctx = document.getElementById("chart").getContext("2d");
+    new Chart(ctx, {
       type: "line",
       data: {
         labels: labels,
         datasets: [{
           label: "Revenue",
-          data: data
+          data: values
         }]
       }
     });
-});
+  })
+  .catch(err => {
+    document.body.innerHTML += "<p style='color:red'>ERROR: " + err.message + "</p>";
+  });
 </script>
 
 </body>
